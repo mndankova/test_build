@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #swarm registry
-docker-machine create -d virtualbox --virtualbox-memory "512" keystore
+docker-machine create -d virtualbox keystore
 docker-machine env keystore -- bash
 eval "$(docker-machine env keystore --shell bash)"
 docker run -d -p 8500:8500 -h consul progrium/consul -server -bootstrap
@@ -13,7 +13,6 @@ echo consul IP: $consul_ip
 #swarm master node
 docker-machine create \
     -d virtualbox \
-    --virtualbox-memory "128" \
     --swarm --swarm-master \
     --swarm-discovery="consul://$consul_ip:8500" \
     --engine-opt="cluster-store=consul://$consul_ip:8500" \
@@ -22,7 +21,6 @@ docker-machine create \
 
 #worker node=API
 docker-machine create -d virtualbox \
-    --virtualbox-memory "128" \
     --swarm \
     --swarm-discovery="consul://$consul_ip:8500" \
     --engine-opt="cluster-store=consul://$consul_ip:8500" \
@@ -32,7 +30,6 @@ docker-machine create -d virtualbox \
 
 #worker node=WEBAPP
 docker-machine create -d virtualbox \
-    --virtualbox-memory "128" \
     --swarm \
     --swarm-discovery="consul://$consul_ip:8500" \
     --engine-opt="cluster-store=consul://$consul_ip:8500" \
@@ -42,7 +39,6 @@ docker-machine create -d virtualbox \
 
 #worker node=DATABASE
 docker-machine create -d virtualbox \
-    --virtualbox-memory "128" \
     --swarm \
     --swarm-discovery="consul://$consul_ip:8500" \
     --engine-opt="cluster-store=consul://$consul_ip:8500" \
