@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
 
-#creating certificate
-openssl req -x509 -days 365 -newkey rsa:1024 \
-        -keyout cert.pem -out cert.pem
-openssl x509 -inform pem -in cert.pem \
-        -outform der -out cert.cer
-ssh-keygen -y -f cert.pem > cert.pub
-
 #swarm registry
 docker-machine create -d virtualbox keystore
 docker-machine env keystore -- bash
