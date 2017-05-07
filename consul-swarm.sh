@@ -2,8 +2,10 @@
 
 #swarm registry
 docker-machine create -d virtualbox keystore
-docker-machine env keystore -- bash
-eval "$(docker-machine env keystore --shell bash)"
+docker-machine env keystore --bash
+
+eval "$(docker-machine env keystore --bash)"
+
 docker run -d -p 8500:8500 -h consul progrium/consul -server -bootstrap
 docker-machine ip keystore
 export consul_ip=$(docker-machine ip keystore)
