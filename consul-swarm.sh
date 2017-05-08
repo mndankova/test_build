@@ -39,7 +39,7 @@ docker-machine create -d virtualbox \
     --engine-label noderole=webapp \
     cluster-node-webapp
 
-#worker node=DATABASE
+#worker node=DB
 docker-machine create -d virtualbox \
     --swarm \
     --swarm-discovery="consul://$consul_ip:8500" \
