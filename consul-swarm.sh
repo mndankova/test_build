@@ -51,19 +51,18 @@ docker run -d --name $CONSUL_MASTER -h $CONSUL_MASTER \
 		-bootstrap
 echo "======consul-master_IP: $CONSUL_MASTER_IP"
 
-REGISTRATOR_TAG=v6
 echo "======registrator/swarm-master-node"
 eval $(docker-machine env $SWARM_MASTER)
 docker run -d \
 	-v /var/run/docker.sock:/tmp/docker.sock \
 	-h registrator-swarm-master \
 	--name registrator-swarm-master \
-	gliderlabs/registrator:$REGISTRATOR_TAG \
+	gliderlabs/registrator:v6 \
 	consul://$(docker-machine ip $SWARM_MASTER):8500 \
 	-ip $(docker-machine ip $SWARM_MASTER)
 
 #swarm-node
-SWARM_NODES=("redis" "postgres" "mongo" "rabbit" "core")
+SWARM_NODES=("db" "app" "core")
 for i in "${SWARM_NODES[@]}"; do
 	echo "======creating swarm-node $i"
 	docker-machine create \
@@ -96,7 +95,7 @@ for i in "${SWARM_NODES[@]}"; do
 		-v /var/run/docker.sock:/tmp/docker.sock \
 		-h registrator-$i \
 		--name registrator-$i \
-		gliderlabs/registrator:$REGISTRATOR_TAG \
+		gliderlabs/registrator:v6 \
 		consul://$NODE_IP:8500 \
 		-ip $NODE_IP
 
