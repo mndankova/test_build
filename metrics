@@ -20,7 +20,7 @@ def object_to_prometheus(prefix, stats_dict, labels, label_name=None):
     for name, value in stats_dict.items():
         name = name.replace(" ", "_")
         if name.isupper() or name in EXCLUDE_FIELDS:
-            # If isupper - it is request vars. No need to save it.
+            #if isupper - it is request vars
             continue
         if isinstance(value, list):
             yield from list_to_prometheus("{}_{}".format(prefix, name), value, labels, name)
@@ -33,7 +33,7 @@ def build_prometheus_stats(stats_addr):
     uwsgi_stats = get_stats(stats_addr)
     stats = object_to_prometheus(PREFIX, uwsgi_stats, [])
     grouped_stats = defaultdict(list)
-    # Need to group all values by name, otherwise prometheus do not accept it
+    #otherwise prometheus do not accept it
     for metric_name, labels, value in stats:
         grouped_stats[metric_name].append((labels, value))
     for metric_name, stats in grouped_stats.items():
