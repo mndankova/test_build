@@ -67,7 +67,7 @@ class PongResource(object):
 def startup_prometheus(MetricsResource, HealthzResource,
                        stats_address="http://127.0.0.1:1717"):
     REGISTRY.register(get_stats_collector(lambda: build_prometheus_stats(stats_address)))
-    api = falcon.API()
+    api = flask.API()
     api.add_error_handler(Exception, handler=handle_error)
     api.add_route('/metrics', MetricsResource())
     api.add_route('/healthz/ping', PongResource())
