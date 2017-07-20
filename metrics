@@ -1,0 +1,108 @@
+
+import logging
+import traceback
+from collections import defaultdict
+from pickle import loads
+
+import redis
+import requests_unixsocket
+from prometheus_client.core import GaugeMetricFamily, REGISTRY
+r = redis.Redis()
+session = requests_unixsocket.Session()
+PREFIX = "uwsgi"
+EXCLUDE_FIELDS = {"pid", "uid", "cwd", "vars"}
+LABEL_VALUE_FIELDS = {"id", "name"}
+def object_to_prometheus(prefix, stats_dict, labels, label_name=None):
+    label_value = next((stats_dict[field] for field in LABEL_VALUE_FIELDS if field in stats_dict), None)
+    if label_name is not None and label_value is not None:
+        label_name = label_name.rstrip("s")
+        labels = labels + [(label_name, str(label_value))]
+    for name, value in stats_dict.items():
+        name = name.replace(" ", "_")
+        if name.isupper() or name in EXCLUDE_FIELDS:
+            # If isupper - it is request vars. No need to save it.
+            continue
+        if isinstance(value, list):
+            yield from list_to_prometheus("{}_{}".format(prefix, name), value, labels, name)
+        elif name not in LABEL_VALUE_FIELDS and isinstance(value, (int, float)):
+            yield "{}_{}".format(prefix, name), sorted(labels), value
+def list_to_prometheus(prefix, stats_list, labels, label_name):
+    for stats in stats_list:
+        yield from object_to_prometheus(prefix, stats, labels, label_name)
+def build_prometheus_stats(stats_addr):
+    uwsgi_stats = get_stats(stats_addr)
+    stats = object_to_prometheus(PREFIX, uwsgi_stats, [])
+    grouped_stats = defaultdict(list)
+    # Need to group all values by name, otherwise prometheus do not accept it
+    for metric_name, labels, value in stats:
+        grouped_stats[metric_name].append((labels, value))
+    for metric_name, stats in grouped_stats.items():
+        label_names = [name for name, _ in stats[0][0]]
+        g = GaugeMetricFamily(metric_name, "", labels=label_names)
+        for labels, value in stats:
+            g.add_metric([value for _, value in labels], value)
+        yield g
+def get_stats_collector(stats_getter):
+    class StatsCollector:
+        def collect(self):
+            yield from stats_getter()
+    return StatsCollector()
+def get_stats(stats_addr):
+    resp = session.get(stats_addr)
+    resp.raise_for_status()
+    return resp.json()
+def handle_error(e, req, resp, params):
+    logging.error(traceback.format_exc())
+    try:
+        raise e
+    except falcon.HTTPError:
+        raise e
+    except Exception:
+        raise HTTPInternalServerError('Internal Server Error', str(e))
+class PongResource(object):
+    def on_get(self, req, resp):
+        resp.status = HTTP_200
+        resp.content_type = 'text/plain'
+        resp.body = 'PONG'
+def startup_prometheus(MetricsResource, HealthzResource,
+                       stats_address="http://127.0.0.1:1717"):
+    REGISTRY.register(get_stats_collector(lambda: build_prometheus_stats(stats_address)))
+    api = falcon.API()
+    api.add_error_handler(Exception, handler=handle_error)
+    api.add_route('/metrics', MetricsResource())
+    api.add_route('/healthz/ping', PongResource())
+    api.add_route('/healthz/', HealthzResource())
+    return api
+def process_redis_stuff(metrics):
+    #metrics saved processes/threads in redis...
+    if type is Gauge, read and set
+    if Gauge with labels, hgetall and set
+    if Histogram, read and empty the list, observe values one by one
+    #
+    for (metric_name, metric) in metrics.items():
+        metric_type = type(metric).__name__
+        #logging.debug('Investigating metric %s typed %s' % (metric_name, metric_type))
+        if metric_type == 'Gauge':
+            value = r.get(metric_name) or 0
+            # logging.debug('Setting %s to %s' % (metric_name, value))
+            metric.set(value)
+        elif metric_type == '_LabelWrapper':
+            #label classes are gauge - to change, check _wrappedClass
+            labels_and_values = r.hgetall(metric_name)
+            for (labels, value) in labels_and_values.items():
+                value = float(value)
+                clean_labels = {}
+                for (lab, val) in loads(labels).items():
+                    lab = type(lab) == bytes and lab.decode('utf-8') or lab
+                    val = type(val) == bytes and val.decode('utf-8') or val
+                    clean_labels[lab] = val
+                # logging.debug('Setting %s to %s with labels %s' % (metric_name, value, clean_labels))
+                metric.labels(clean_labels).set(value)
+        elif metric_type == 'Histogram':
+            # get all values in the list (Array)
+            values = r.lrange(metric_name, 0, -1)
+            # cut those values out from Redis
+            r.ltrim(metric_name, len(values), -1)
+            # logging.debug('Observing %s values for %s' % (len(values), metric_name))
+            for val in values:
+                metric.observe(float(val))
