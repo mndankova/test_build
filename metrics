@@ -1,4 +1,4 @@
-
+#metrics
 import logging
 import traceback
 from collections import defaultdict
@@ -84,7 +84,7 @@ def process_redis_stuff(metrics):
         #logging.debug('Investigating metric %s typed %s' % (metric_name, metric_type))
         if metric_type == 'Gauge':
             value = r.get(metric_name) or 0
-            # logging.debug('Setting %s to %s' % (metric_name, value))
+            #logging.debug('Setting %s to %s' % (metric_name, value))
             metric.set(value)
         elif metric_type == '_LabelWrapper':
             #label classes are gauge - to change, check _wrappedClass
@@ -96,13 +96,14 @@ def process_redis_stuff(metrics):
                     lab = type(lab) == bytes and lab.decode('utf-8') or lab
                     val = type(val) == bytes and val.decode('utf-8') or val
                     clean_labels[lab] = val
-                # logging.debug('Setting %s to %s with labels %s' % (metric_name, value, clean_labels))
+                #logging.debug('Setting %s to %s with labels %s' % (metric_name, value, clean_labels))
                 metric.labels(clean_labels).set(value)
         elif metric_type == 'Histogram':
-            # get all values in the list (Array)
+            #get all values in the list (Array)
             values = r.lrange(metric_name, 0, -1)
-            # cut those values out from Redis
+            #cut those values out from Redis
             r.ltrim(metric_name, len(values), -1)
-            # logging.debug('Observing %s values for %s' % (len(values), metric_name))
+            #logging.debug('Observing %s values for %s' % (len(values), metric_name))
             for val in values:
                 metric.observe(float(val))
+                
