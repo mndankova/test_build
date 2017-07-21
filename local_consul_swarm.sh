@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+#DRIVER=$DRIVER
+#if ! DRIVER=VIRTUALBOX
+
 #boot2docker-17.05.iso
 if [ ! -f $HOME/.docker/machine/cache/boot2docker-17.05.iso ]; then
   curl -L https://github.com/boot2docker/boot2docker/releases/download/v17.05.0-ce/boot2docker.iso > $HOME/.docker/machine/cache/boot2docker-17.05.iso
