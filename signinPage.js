@@ -2,11 +2,13 @@
 
 var signinPage = function () {
     function signinPage() {
-
+        
         this.get = function() {
             browser.get('');
         };
 
+        var ec = protractor.ExpectedConditions,
+            
         this.email = element(by.name('email'));
         this.setEmail = function(value) {this.email.clear(); this.email.sendKeys(value);};
         this.shouldHaveEmail = function(value) {expect(this.email.getAttribute('value')).toEqual(value);};
@@ -28,11 +30,7 @@ var signinPage = function () {
         this.logInButton = element(by.buttonText('Log in'));
         this.clickLogInButton = function() {this.logInButton.click();};
         this.logInButtonShouldBeVisible = function() {expect(this.logInButton.isDisplayed()).toBeTruthy();};
-        
-        this.signUpLink = element(by.linkText('Sign Up'));
-        this.clickSignUpLink = function() {this.signUpLink.click();};
-        this.signUpLinkShouldBeVisible = function() {expect(this.signUpLink.isDisplayed()).toBeTruthy();};
-    }
+     }
  };
 
 module.exports = new signinPage();
