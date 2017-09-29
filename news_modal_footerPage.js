@@ -16,7 +16,7 @@ var ptor;
 
     this.clickCancelButton = function(rowIndex1) {this.buttonsButton.get(rowIndex1).element(by.buttonText('Cancel')).click();};
     this.cancelButtonShouldBeVisible = function(rowIndex1) {
-        expect(this.buttonsButton.get(rowIndex1).element(by.buttonText('Cancel')).isDisplayed()).toBeTruthy();
+      expect(this.buttonsButton.get(rowIndex1).element(by.buttonText('Cancel')).isDisplayed()).toBeTruthy();
     };
 };
 module.exports = new news_modal_footerPageObject();
