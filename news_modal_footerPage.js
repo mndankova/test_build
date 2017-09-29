@@ -1,10 +1,4 @@
 var news_modal_footerPageObject = function() {
-var ptor;
-
-  beforeEach(function() {
-    browser.get('');
-    ptor = protractor.getInstance();
-  });
   
     this.get = function() {
         browser.get('');
